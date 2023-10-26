@@ -5,7 +5,8 @@ dicionaryTags = [
     'qtd_pes',
     'qtd_pes_pobres',
     'qtd_pes_vulneraveis',
-    'qtd_pes_pob_vul'
+    'qtd_pes_pob_vul',
+    'num_renda',
 ]
 
 dicionaryTypes = [
@@ -13,7 +14,8 @@ dicionaryTypes = [
     'Número de pessoas',
     'Númeo de pessoas pobres',
     'Número de pessoas vulneráveis',
-    'Número de pessoas pobres ou vulneráveis'
+    'Número de pessoas pobres ou vulneráveis',
+    'Renda média (R$)'
 ]
 
 regionTags = [1, 2, 3, 4, 5]
@@ -47,7 +49,7 @@ def createXlsx(csv):
 def calculatePoorPercentage(csv):
     percentage_pes_poor = []
 
-    for row in csv.iterrows():
+    for _, row in csv.iterrows():
         poor_percentage = (row['qtd_pes_pobres'] / row['qtd_pes']) * 100
         percentage_pes_poor.append(poor_percentage)
 
@@ -58,7 +60,7 @@ def calculatePoorPercentage(csv):
 def calculateVulnerablePercentage(csv):
     percentage_pes_vulnerable = []
 
-    for row in csv.iterrows():
+    for _, row in csv.iterrows():
         vulnerable_percentage = (
             row['qtd_pes_vulneraveis'] / row['qtd_pes']) * 100
         percentage_pes_vulnerable.append(vulnerable_percentage)
@@ -69,12 +71,33 @@ def calculateVulnerablePercentage(csv):
 csv_data = pd.read_csv("MunicipioBrasil_20230102.csv")
 csv_data_filtered = csv_data[dicionaryTags]  # CSV a ser manipulado
 
+print(csv_data_filtered)
+csv_data_filtered['percent_pes_pobres'] = calculatePoorPercentage(
+    csv_data_filtered)
+csv_data_filtered['percent_pes_vulneraveis'] = calculateVulnerablePercentage(
+    csv_data_filtered)
 
-csv_data_filtered['percent_pes_pobres'] = calculatePoorPercentage()
-csv_data_filtered['percent_pes_vulneraveis'] = calculateVulnerablePercentage()
+############
+# TODO Criar uma nova aba para análise de dados por região
+data_frame_regions = pd.DataFrame()
+
+#############
+# TODO falta calcular a media salarial por regiao.
+data_frame_regions_tags = [
+    'cod_regiao',
+    'qtd_total_pes',
+    'qtd_total_pes_pobre',
+    'qtd_total_pes_vulneravel',
+    'percent_pes_pobres',
+    'percent_pes_vulneraveis',
+]
+
+database_filter_norte_region = csv_data_filtered[csv_data_filtered['cod_regiao'] == regionTags[0]]
+print(database_filter_norte_region)
+
 
 # TODO falta calcular a media salarial por regiao.
 # TODO falta calcular a porcentagem de pessoas pobres, comparada ao total de pessoas por região.
 # TODO falta calcular a porcentagem de pessoas vulneráveis, comparada ao total de pessoas por região.
 
-createXlsx(csv_data_filtered)
+# createXlsx(csv_data_filtered)
