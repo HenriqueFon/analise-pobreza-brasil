@@ -62,113 +62,58 @@ def createXlsx(csv, region):
     return
 
 
-# calcula a porcentagem de pessoas pobre, dividindo a quantidade de pessoas pobre/ total de pessoas
-def calculatePoorPercentage(csv):
-    percentage_pes_poor = []
+# calcula a porcentagem de pessoas vulneráveis ou pobres, dividindo a quantidade de pessoas vulneráveis ou pobres/ total de pessoas
+def calculatePesPercentage(csv, regionTag: int, columNameFiltered: str):
+    database_filter = csv[csv['cod_regiao'] == regionTag]
 
-    for _, row in csv.iterrows():
-        poor_percentage = (row['qtd_pes_pobres'] / row['qtd_pes']) * 100
-        percentage_pes_poor.append(poor_percentage)
+    total_pes = database_filter['qtd_pes'].sum()
+    colum_name = database_filter[columNameFiltered].sum()
 
-    return percentage_pes_poor
-
-
-# calcula a porcentagem de pessoas vulneráveis, dividindo a quantidade de pessoas vulneráveis/ total de pessoas
-def calculateVulnerablePercentage(csv):
-    percentage_pes_vulnerable = []
-
-    for _, row in csv.iterrows():
-        vulnerable_percentage = (
-            row['qtd_pes_vulneraveis'] / row['qtd_pes']) * 100
-        percentage_pes_vulnerable.append(vulnerable_percentage)
-
-    return percentage_pes_vulnerable
-
-#calcula a media de renda média para região norte
-def calculateAverageRevenueNorteRegion(csv):
-
-    database_filter_norte_region = csv[csv['cod_regiao'] == regionTags[0]]
-
-    avarage_revenue_norte_region = database_filter_norte_region['num_renda'].mean()
-
-    return avarage_revenue_norte_region
-
-#calcula a media de renda média para região nordeste
-def calculateAverageRevenueNordesteRegion(csv):
-
-    database_filter_nordeste_region = csv[csv['cod_regiao'] == regionTags[1]]
-
-    avarage_revenue_nordeste_region = database_filter_nordeste_region['num_renda'].mean()
-
-    return avarage_revenue_nordeste_region
-
-# calcula a media de renda média para região sudeste
-def calculateAverageRevenueSudesteRegion(csv):
-
-    database_filter_sudeste_region = csv[csv['cod_regiao'] == regionTags[2]]
-
-    avarage_revenue_sudeste_region = database_filter_sudeste_region['num_renda'].mean()
-
-    return avarage_revenue_sudeste_region
-
-# calcula a media de renda média para região sul
-def calculateAverageRevenueSulRegion(csv):
-
-    database_filter_sul_region = csv[csv['cod_regiao'] == regionTags[3]]
-
-    avarage_revenue_sul_region = database_filter_sul_region['num_renda'].mean()
-
-    return avarage_revenue_sul_region
-
-# calcula a media de renda média para região Centro Oeste
-def calculateAverageRevenueCentroOesteRegion(csv):
-
-    database_filter_centro_oeste_region = csv[csv['cod_regiao'] == regionTags[4]]
-
-    avarage_revenue_centro_oeste_region = database_filter_centro_oeste_region['num_renda'].mean()
-
-    return avarage_revenue_centro_oeste_region
+    return (colum_name / total_pes) * 100
 
 
+# Calcula a renda media por regiao
+def calculateAverageRevenue(csv, regionTag: int):
+    database_filter = csv[csv['cod_regiao'] == regionTag]
+    avarage_revenue = database_filter['num_renda'].mean()
+    return avarage_revenue
 
-# Inicio das execuções
+# Calcula o total de pessoas de uma coluna, filtrada por regiao
 
-csv_data = pd.read_csv("MunicipioBrasil_20230102.csv")
-csv_data_filtered = csv_data[dicionaryTags]  # CSV a ser manipulado
 
-csv_data_filtered['percent_pes_pobres'] = calculatePoorPercentage(csv_data_filtered)
+def calculateTotalPes(csv, regionTag: int, columNameFiltered: str):
+    filter_region = csv[csv['cod_regiao'] == regionTag]
+    return filter_region[columNameFiltered].sum()
 
-csv_data_filtered['percent_pes_vulneraveis'] = calculateVulnerablePercentage(
-    csv_data_filtered)
+# Gera um data frame com os resultados
 
-csv_data_filtered['avarage_revenue_norte'] = calculateAverageRevenueNorteRegion(csv_data_filtered)
 
-csv_data_filtered['avarage_revenue_nordeste'] = calculateAverageRevenueNordesteRegion(csv_data_filtered)
+def executeDataFrameResults(csv):
+    data_frame_regions = pd.DataFrame()
 
-csv_data_filtered['avarage_revenue_sudeste'] = calculateAverageRevenueSudesteRegion(csv_data_filtered)
+    for region in regionTags:
+        data = {
+            'cod_regiao': region,
+            'qtd_total_pes': calculateTotalPes(csv, region, 'qtd_pes'),
+            'qtd_total_pes_pobre': calculateTotalPes(csv, region, 'qtd_pes_pobres'),
+            'qtd_total_pes_vulneravel': calculateTotalPes(csv, region, 'qtd_pes_vulneraveis'),
+            'percent_pes_pobre': calculatePesPercentage(csv, region, 'qtd_pes_pobres'),
+            'percent_pes_vulneraveis': calculatePesPercentage(csv, region, 'qtd_pes_vulneraveis'),
+            'num_renda': calculateAverageRevenue(csv, region)
+        }
 
-csv_data_filtered['avarage_revenue_sul'] = calculateAverageRevenueSulRegion(csv_data_filtered)
+        new_row = pd.DataFrame(data, index=[0])
 
-csv_data_filtered['avarage_revenue_centro_oeste'] = calculateAverageRevenueCentroOesteRegion(csv_data_filtered)
+        data_frame_regions = pd.concat(
+            [data_frame_regions, new_row], ignore_index=True)
 
-############
-# TODO Criar uma nova aba para análise de dados por região
-data_frame_regions = pd.DataFrame()
+    return data_frame_regions
 
-data_frame_regions['avg_revenue_norte'] = [calculateAverageRevenueNorteRegion(csv_data_filtered)]
-data_frame_regions['avarage_revenue_nordeste'] = [calculateAverageRevenueNordesteRegion(csv_data_filtered)]
-data_frame_regions['avg_revenue_sudeste'] = [calculateAverageRevenueSudesteRegion(csv_data_filtered)]
-data_frame_regions['avg_revenue_sul'] = [calculateAverageRevenueSulRegion(csv_data_filtered)]
-data_frame_regions['avg_revenue_centro_oeste'] = [calculateAverageRevenueCentroOesteRegion(csv_data_filtered)]
 
 #############
-# TODO falta calcular a media salarial por regiao.
+# Filtra os dados
+csv_data = pd.read_csv("MunicipioBrasil_20230102.csv")
+csv_data_filtered = csv_data[dicionaryTags]
+df_results = executeDataFrameResults(csv_data_filtered)
 
-
-
-
-# TODO falta calcular a media salarial por regiao.
-# TODO falta calcular a porcentagem de pessoas pobres, comparada ao total de pessoas por região.
-# TODO falta calcular a porcentagem de pessoas vulneráveis, comparada ao total de pessoas por região.
-
-createXlsx(csv_data_filtered, data_frame_regions)
+createXlsx(csv_data_filtered, df_results)
