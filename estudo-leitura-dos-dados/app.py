@@ -28,20 +28,37 @@ regionTypes = [
     'Centro-Oeste'
 ]
 
+data_frame_regions_tags = [
+    'avg_revenue_norte',
+    'avg_revenue_nordeste',
+    'avg_revenue_sudeste',
+    'avg_revenue_sul',
+    'avg_revenue_centro_oeste'
+]
+
+data_frame_regions_types = [
+    'Renda média do Norte',
+    'Renda média do Nordeste',
+    'Renda média do Sudeste',
+    'Renda média do Sul',
+    'Renda média do Centro Oeste'
+]
+
 
 # Cria o xlsx de acordo com csv passado por parametro e adiciona o dicionario
-def createXlsx(csv):
+def createXlsx(csv, region):
     dicionary = [{'tag': tag, 'descricao': descricao}
                  for tag, descricao in zip(dicionaryTags, dicionaryTypes)]
 
     df_dict = pd.DataFrame(csv)
     df_dicionary = pd.DataFrame(dicionary)
+    df_region = pd.DataFrame(region)
 
     # Salve o DataFrame do dicionário em uma planilha específica dentro do arquivo CSV
     with pd.ExcelWriter('analise_pobreza_brasil.xlsx', engine='openpyxl') as writer:
         df_dict.to_excel(writer, sheet_name='Dados', index=False)
         df_dicionary.to_excel(writer, sheet_name='Dicionario', index=False)
-
+        df_region.to_excel(writer, sheet_name='Análise', index=False)
     return
 
 
@@ -134,23 +151,19 @@ csv_data_filtered['avarage_revenue_sul'] = calculateAverageRevenueSulRegion(csv_
 
 csv_data_filtered['avarage_revenue_centro_oeste'] = calculateAverageRevenueCentroOesteRegion(csv_data_filtered)
 
-print(csv_data_filtered)
-
-
 ############
 # TODO Criar uma nova aba para análise de dados por região
 data_frame_regions = pd.DataFrame()
 
+data_frame_regions['avg_revenue_norte'] = [calculateAverageRevenueNorteRegion(csv_data_filtered)]
+data_frame_regions['avarage_revenue_nordeste'] = [calculateAverageRevenueNordesteRegion(csv_data_filtered)]
+data_frame_regions['avg_revenue_sudeste'] = [calculateAverageRevenueSudesteRegion(csv_data_filtered)]
+data_frame_regions['avg_revenue_sul'] = [calculateAverageRevenueSulRegion(csv_data_filtered)]
+data_frame_regions['avg_revenue_centro_oeste'] = [calculateAverageRevenueCentroOesteRegion(csv_data_filtered)]
+
 #############
 # TODO falta calcular a media salarial por regiao.
-data_frame_regions_tags = [
-    'cod_regiao',
-    'qtd_total_pes',
-    'qtd_total_pes_pobre',
-    'qtd_total_pes_vulneravel',
-    'percent_pes_pobres',
-    'percent_pes_vulneraveis',
-]
+
 
 
 
@@ -158,4 +171,4 @@ data_frame_regions_tags = [
 # TODO falta calcular a porcentagem de pessoas pobres, comparada ao total de pessoas por região.
 # TODO falta calcular a porcentagem de pessoas vulneráveis, comparada ao total de pessoas por região.
 
-# createXlsx(csv_data_filtered)
+createXlsx(csv_data_filtered, data_frame_regions)
